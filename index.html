@@ -35,12 +35,12 @@ textarea{height:90px;font:12px monospace}
 .c.t{outline:2px solid var(--ink);outline-offset:1px}
 .c.d::after{content:"";position:absolute;right:5px;top:5px;width:6px;height:6px;border-radius:50%;background:var(--ink)}
 #nav{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--card);border-top:1px solid var(--ln);padding-bottom:env(safe-area-inset-bottom,0px)}
-#nav button{flex:1;border:0;border-radius:0;margin:0;background:none;color:var(--mut)}#nav button.on{color:var(--acc);font-weight:700}
+#nav{overflow-x:auto;scrollbar-width:none}#nav::-webkit-scrollbar{display:none}#nav button{flex:1 0 auto;width:auto;font-size:14px;white-space:nowrap;padding:14px 8px;border:0;border-radius:0;margin:0;background:none;color:var(--mut);box-shadow:inset 0 3px 0 transparent}#nav button.on{color:var(--acc);font-weight:700;box-shadow:inset 0 3px 0 var(--acc)}
 #sh{position:fixed;inset:0;background:rgba(0,0,0,.45);display:none;align-items:flex-end;justify-content:center;z-index:9}#sh.o{display:flex}
 #sh>div{background:var(--card);width:100%;max-width:480px;border-radius:16px 16px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));max-height:92vh;overflow:auto}
 @media(min-width:900px){
 #nav{right:auto;top:0;bottom:auto;width:170px;flex-direction:column;border-top:0;border-right:1px solid var(--ln);padding:20px 8px}
-#nav button{text-align:left;padding:12px}#app{padding:24px 24px 24px 200px;max-width:1160px}
+#nav{overflow:visible}#nav button{text-align:left;padding:12px;flex:none}#nav button.on{box-shadow:inset 3px 0 0 var(--acc)}#app{padding:24px 24px 24px 200px;max-width:1160px}
 .two{display:grid;grid-template-columns:1fr 1fr;gap:0 12px;align-items:start}#sh{align-items:center}#sh>div{border-radius:16px}}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}.chip{width:auto;min-height:38px;margin:0;padding:6px 12px}.chip.on{background:var(--acc);color:var(--ai);border-color:var(--acc)}
 select{font:inherit;color:inherit;background:var(--bg);border:1px solid var(--ln);border-radius:10px;padding:11px 12px;margin:4px 0 10px;width:100%}
@@ -63,6 +63,7 @@ button:disabled{opacity:.3;cursor:default}
 .bar{width:100%;max-width:64px;border-radius:8px 8px 3px 3px;background:var(--mut);opacity:.28}.b.l .bar{background:var(--acc);opacity:1}
 .bv{font-weight:700;font-size:17px;line-height:1.2;text-align:center;font-variant-numeric:tabular-nums;margin-bottom:5px}.bd{font-size:12px;font-weight:500;color:var(--mut)}
 .bl{font-size:12px;color:var(--mut);margin-top:8px}.b.l .bl{color:var(--ink);font-weight:600}
+.lc{width:100%;height:auto;max-height:230px;margin-top:8px}
 </style>
 </head>
 <body>
@@ -128,7 +129,7 @@ function vHome(){
  +cell('Калории',r.k,'',late&&r.k==null,r.k==null?wait:(g?(r.k<=g.k?'в норме':'выше на '+fm(r.k-g.k)):''))
  +cell('Белок',r.p,' г',late&&r.p==null,r.p==null?wait:(g?(r.p>=g.p?'цель есть':'не хватает '+fm(g.p-r.p)):''))
  +`</div><button class="pri" data-a="day" data-d="${t}">Внести данные</button></div>`
- +vCal()+vWeight(wchg())+vMeas()+`</div>`}
+ +vCal()+vWeight(wchg())+vNut()+vMeas()+`</div>`}
 function vCal(){
  const t=today(),W=['пн','вт','ср','чт','пт','сб','вс'];let days=[],title='Эта неделя';
  if(!ui.cal){const o=(new Date().getDay()+6)%7;for(let i=0;i<7;i++)days.push(add(t,i-o))}
@@ -137,7 +138,7 @@ function vCal(){
   for(let i=0;i<(b.getDay()+6)%7;i++)days.push(null);
   for(let i=1;i<=n;i++)days.push(iso(new Date(b.getFullYear(),b.getMonth(),i)))}
  return `<div class="card"><div class="row"><b>${title}</b><span class="sp"></span>${ui.cal?'<button class="ic" data-a="mo" data-n="-1" aria-label="Назад">‹</button><button class="ic" data-a="mo" data-n="1" aria-label="Вперёд">›</button>':''}<button class="ic" data-a="cal">${ui.cal?'Неделя':'Месяц'}</button></div><div class="cal">${W.map(x=>`<i>${x}</i>`).join('')}${days.map(ds=>ds?`<button class="c ${st(ds)}${ds===t?' t':''}${inc(ds)?' d':''}" data-a="day" data-d="${ds}">${+ds.slice(8)}</button>`:'<i></i>').join('')}</div></div>`}
-const vWeight=c=>`<div class="card"><b>Вес</b>${c?`<div class="big">${c.cw} кг <span class="mut">на ${dlab(c.c)}</span></div><div class="cells"><div><span class="mut">${c.day?'за день':'к прошлому замеру'}</span><b>${sg(c.d)}</b></div><div><span class="mut">за неделю</span><b>${sg(c.w)}</b></div><div><span class="mut">за месяц</span><b>${sg(c.m)}</b></div></div>`:'<p class="mut">Пока нет замеров веса.</p>'}</div>`;
+const vWeight=c=>`<div class="card"><div class="row"><b>Вес</b><span class="sp"></span><button class="ic" data-a="cw">${ui.cw?'Скрыть график':'График'}</button></div>${c?`<div class="big">${c.cw} кг <span class="mut">на ${dlab(c.c)}</span></div><div class="cells"><div><span class="mut">${c.day?'за день':'к прошлому замеру'}</span><b>${sg(c.d)}</b></div><div><span class="mut">за неделю</span><b>${sg(c.w)}</b></div><div><span class="mut">за месяц</span><b>${sg(c.m)}</b></div></div>`:'<p class="mut">Пока нет замеров веса.</p>'}${ui.cw?`${pc()}${lchart()}`:''}</div>`;
 function vProf(){
  const g=goal(today())||{},s=D.set;
  return `<h1>Профиль</h1><div class="card"><b>Цели</b><label>Целевой вес, кг<input id="gw" inputmode="decimal" value="${g.w??''}"></label><label>Калории: не больше, ккал<input id="gk" inputmode="numeric" value="${g.k??''}"></label><label>Белок: не меньше, г<input id="gp" inputmode="numeric" value="${g.p??''}"></label><label>Время вечернего ввода<input id="ge" type="time" value="${s.eve}"></label><label>Напоминать о замерах (талия, бицепсы, плечи) раз в, дней<input id="gm" inputmode="numeric" value="${s.per}"></label><button class="pri" data-a="goals">Сохранить</button><p class="mut">Новая цель действует с сегодняшнего дня, прошлые дни оцениваются по прежним целям.</p></div>
@@ -226,6 +227,7 @@ const mean=a=>a.length?a.reduce((m,x)=>m+x,0)/a.length:0;
 function render(){
  $('#app').innerHTML=VIEW();
  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.t===ui.tab));
+ if(ui.nt!==ui.tab){ui.nt=ui.tab;const a=document.querySelector('#nav button.on');const n=$('#nav');if(a&&n.scrollTo)n.scrollTo({left:a.offsetLeft-(n.clientWidth-a.offsetWidth)/2,behavior:'smooth'})}
  $('#nav').style.display=(R||ui.sv==='pre')?'none':'';
  clearInterval(tick);if(R){tick=setInterval(upd,250);upd()}}
 function upd(){const e=$('#tm');if(!e||!R)return;const d=(Date.now()-(R.ph==='r'?R.rt:R.ws))/1000;e.textContent=d<0?String(Math.ceil(-d)):tm(d)}
@@ -292,6 +294,10 @@ function dispatch(a,d,el){
    s.w=Object.assign({},s.w,nw);const ds=$('#ed').value;if(ds&&ds<=today())s.date=ds;
    save();close();render();break}
   case 'gsel':ui.sg=d.c;ui.so=0;render();break;
+  case 'cw':ui.cw=!ui.cw;render();break;
+  case 'ck':ui.ck=!ui.ck;render();break;
+  case 'cper':ui.cp=+d.n;render();break;
+  case 'cmet':ui.cm=d.k;render();break;
   case 'spn':{const n=gl(scid()).length;ui.so=Math.max(0,Math.min((ui.so||0)+4,n-4));render();break}
   case 'spp':ui.so=Math.max(0,(ui.so||0)-4);render();break;
   case 'msel':ui.sm=d.k;render();break;
@@ -363,6 +369,34 @@ let sx=null;
 document.addEventListener('touchstart',e=>{sx=e.target.closest&&e.target.closest('.bars')?e.touches[0].clientX:null},{passive:true});
 document.addEventListener('touchend',e=>{if(sx==null)return;const dx=e.changedTouches[0].clientX-sx;sx=null;if(Math.abs(dx)>50)dispatch(dx>0?'spn':'spp',{})},{passive:true});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&R){upd();try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>wl=l).catch(()=>{})}catch(e){}}});
+/* --- графики веса и питания --- */
+const days=n=>Array.from({length:n},(_,i)=>add(today(),i-n+1)),fd=s=>s.slice(8)+'.'+s.slice(5,7);
+const pc=()=>`<div class="mc" style="margin-top:10px">${[[7,'7 дн.'],[30,'30 дн.'],[90,'90 дн.']].map(([n,l])=>`<button class="chip${(ui.cp||30)===n?' on':''}" data-a="cper" data-n="${n}">${l}</button>`).join('')}</div>`;
+const halo='style="paint-order:stroke;stroke:var(--card);stroke-width:3px"';
+function lchart(){
+ const n=ui.cp||30,ds=days(n),pts=ds.map((d,i)=>({i,v:D.days[d]&&D.days[d].w})).filter(p=>p.v!=null);
+ if(pts.length<2)return '<p class="mut">Нужно хотя бы два замера веса за этот период.</p>';
+ const gw=(goal(today())||{}).w;let lo=Math.min(...pts.map(p=>p.v)),hi=Math.max(...pts.map(p=>p.v));
+ if(gw!=null){lo=Math.min(lo,gw);hi=Math.max(hi,gw)}
+ const pad=(hi-lo||1)*.18;lo-=pad;hi+=pad;
+ const X=i=>14+i/(n-1)*292,Y=v=>14+(1-(v-lo)/(hi-lo))*92,L=pts[pts.length-1];
+ return `<svg viewBox="0 0 320 132" class="lc" role="img" aria-label="График веса">`
+ +(gw!=null?`<line x1="14" x2="306" y1="${Y(gw).toFixed(1)}" y2="${Y(gw).toFixed(1)}" stroke="var(--mut)" stroke-dasharray="4 4" opacity=".6"/><text x="14" y="${(Y(gw)-4).toFixed(1)}" font-size="10" fill="var(--mut)" ${halo}>цель ${gw}</text>`:'')
+ +`<polyline points="${pts.map(p=>X(p.i).toFixed(1)+','+Y(p.v).toFixed(1)).join(' ')}" fill="none" stroke="var(--acc)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>`
+ +pts.map(p=>`<circle cx="${X(p.i).toFixed(1)}" cy="${Y(p.v).toFixed(1)}" r="${p===L?4.5:2}" fill="var(--acc)"/>`).join('')
+ +`<text x="${X(L.i).toFixed(1)}" y="${(Y(L.v)-9).toFixed(1)}" text-anchor="${L.i>n*.75?'end':'middle'}" font-size="12" font-weight="700" fill="var(--ink)" ${halo}>${L.v}</text>`
+ +`<text x="14" y="128" font-size="10" fill="var(--mut)">${fd(ds[0])}</text><text x="306" y="128" text-anchor="end" font-size="10" fill="var(--mut)">${fd(ds[n-1])}</text></svg>`}
+function nchart(){
+ const n=ui.cp||30,ds=days(n),k=ui.cm==='p'?'p':'k',gv=(goal(today())||{})[k],v=ds.map(d=>D.days[d]&&D.days[d][k]!=null?D.days[d][k]:null);
+ if(v.every(x=>x==null))return '<p class="mut">Нет данных за этот период.</p>';
+ const mx=Math.max(...v.filter(x=>x!=null),gv||0,1)*1.1,W=292/n,Y=x=>108-x/mx*96;
+ return `<svg viewBox="0 0 320 132" class="lc" role="img" aria-label="График питания">`
+ +v.map((x,i)=>{if(x==null)return'';const ok=gv==null||(k==='k'?x<=gv:x>=gv);return `<rect x="${(14+i*W+W*.15).toFixed(1)}" y="${Y(x).toFixed(1)}" width="${(W*.7).toFixed(1)}" height="${(108-Y(x)).toFixed(1)}" rx="${Math.min(3,W*.3).toFixed(1)}" fill="${ok?'var(--acc)':'var(--r)'}"/>`}).join('')
+ +(gv!=null?`<line x1="14" x2="306" y1="${Y(gv).toFixed(1)}" y2="${Y(gv).toFixed(1)}" stroke="var(--ink)" stroke-dasharray="4 4" opacity=".55"/><text x="306" y="${(Y(gv)-4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--mut)" ${halo}>${k==='k'?'не больше':'не меньше'} ${gv}</text>`:'')
+ +`<text x="14" y="128" font-size="10" fill="var(--mut)">${fd(ds[0])}</text><text x="306" y="128" text-anchor="end" font-size="10" fill="var(--mut)">${fd(ds[n-1])}</text></svg>`}
+function vNut(){
+ const r=days(7).map(d=>D.days[d]||{}),av=k=>{const a=r.filter(x=>x[k]!=null).map(x=>x[k]);return a.length?Math.round(mean(a)):null},ak=av('k'),ap=av('p');
+ return `<div class="card"><div class="row"><b>Питание</b><span class="sp"></span><button class="ic" data-a="ck">${ui.ck?'Скрыть график':'График'}</button></div><div class="cells" style="grid-template-columns:1fr 1fr"><div><span class="mut">калории, среднее за 7 дн.</span><b>${ak??'—'}</b></div><div><span class="mut">белок, среднее за 7 дн.</span><b>${ap!=null?ap+' г':'—'}</b></div></div>${ui.ck?`${pc()}<div class="mc" style="margin-top:8px"><button class="chip${ui.cm!=='p'?' on':''}" data-a="cmet" data-k="k">Калории</button><button class="chip${ui.cm==='p'?' on':''}" data-a="cmet" data-k="p">Белок</button></div>${nchart()}`:''}</div>`}
 (async()=>{
  if(TG){try{TG.ready();TG.expand();TG.disableVerticalSwipes&&TG.disableVerticalSwipes()}catch(e){}}
  await load();restoreR();render();
