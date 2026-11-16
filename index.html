@@ -259,8 +259,8 @@ function vRun(){
  const s=R.st[R.i],pr=Math.round((R.i+(R.ph==='w'?0:1))/R.st.length*100),bar=`<div class="rb" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pr}"><i style="width:${pr}%"></i></div>`;
  if(R.ph==='w'){const x=exn(s.e),v=R.ov[s.e]!=null?R.ov[s.e]:R.w[x.c],last=R.i===R.st.length-1;
   return `<div class="run">${bar}<div class="mut">Шаг ${R.i+1} из ${R.st.length} · ${esc(cn(x.c))}</div><h1>${esc(x.n)}</h1><p class="desc">${esc(x.d)}</p><div class="mut">Подход ${s.k} из ${s.R}</div><div class="timer sm" id="tm">0:00</div><div class="cells" style="grid-template-columns:1fr 1fr"><label>Повторы<input id="rp" class="num" type="number" inputmode="numeric" min="0"></label><label>Вес, кг<input id="rw" class="num" inputmode="decimal" value="${v??''}"></label></div>${last?'<div class="mut" style="margin-bottom:6px">Последний подход: введите повторы и нажмите «Завершить тренировку».</div><button class="pri" data-a="fin">Завершить тренировку</button>':'<button class="pri" data-a="dn">Готово</button><div class="acts"><button data-a="fin">Завершить тренировку</button></div>'}</div>`}
- const n=R.st[R.i+1],x=exn(n.e);
- return `<div class="run">${bar}<div class="mut">Отдых</div><div class="timer" id="tm">0:00</div><div class="mut">Дальше · подход ${n.k} из ${n.R}</div><h1>${esc(x.n)}</h1><p class="desc">${esc(x.d)}</p><div class="acts"><button class="pri" data-a="go2">Старт — я отдохнул</button><button data-a="fin">Завершить тренировку</button></div></div>`}
+ const n=R.st[R.i+1],x=exn(n.e),chg=exn(s.e).c!==x.c;
+ return `<div class="run">${bar}<div class="mut">Отдых</div><div class="timer" id="tm">0:00</div><div class="row" style="flex-wrap:wrap"><span class="mut">Дальше · ${esc(cn(x.c))} · подход ${n.k} из ${n.R}</span>${chg?'<span class="tag">смена группы</span>':''}</div><h1>${esc(x.n)}</h1><p class="desc">${esc(x.d)}</p><div class="acts"><button class="pri" data-a="go2">Старт — я отдохнул</button><button data-a="fin">Завершить тренировку</button></div></div>`}
 const mean=a=>a.length?a.reduce((m,x)=>m+x,0)/a.length:0;
 function render(){
  $('#app').innerHTML=VIEW();
@@ -373,7 +373,8 @@ document.addEventListener('visibilitychange',async()=>{
  if(document.hidden||!CS||R||ui.tab==='prof'||ui.pe||ui.sv||$('#sh').classList.contains('o'))return;
  try{const v=await pull();if(!v)return;const o=JSON.parse(v.join(''));if((o.ts||0)>(D.ts||0)){sent=v;adopt(v.join(''));render()}}catch(e){}});
 /* --- статистика по группам мышц --- */
-const gst=(s,c)=>{const a=vs(s).filter(x=>x.c===c),r=a.reduce((m,x)=>m+x.r,0);return{n:a.length,r,avg:a.length?r/a.length:0,vol:a.reduce((m,x)=>m+x.r*x.w,0),rest:mean(s.rs.filter((_,j)=>s.s[j]&&s.s[j].c===c&&s.s[j].r>0)),wt:mean(a.map(x=>x.t))}};
+const rok=(s,j)=>!!(s.s[j]&&s.s[j].r>0&&!(s.s[j+1]&&s.s[j+1].c!==s.s[j].c));
+const gst=(s,c)=>{const a=vs(s).filter(x=>x.c===c),r=a.reduce((m,x)=>m+x.r,0);return{n:a.length,r,avg:a.length?r/a.length:0,vol:a.reduce((m,x)=>m+x.r*x.w,0),rest:mean(s.rs.filter((_,j)=>rok(s,j)&&s.s[j].c===c)),wt:mean(a.map(x=>x.t))}};
 const SHORT={r:'Повторы',avg:'Среднее',vol:'Объём',rest:'Отдых',wt:'Время'},MET=[['r','Повторы',v=>dc(fm(v))],['avg','Среднее за подход',v=>dc(fm(v))],['vol','Объём, кг',v=>dc(fm(v))],['rest','Отдых',v=>v?tm(v):'—'],['wt','Время подхода',v=>v?tm(v):'—']];
 const prevOf=(S,c)=>D.ses.filter(x=>x.t0<S.t0&&x.s.some(y=>y.c===c&&y.r>0)).pop();
 const dlt=(k,a,b)=>{if(b==null)return'';const t=k==='rest'||k==='wt';if(t&&(!a||!b))return'';const d=a-b;return t?` <span class="dl">(${d>=0?'+':'−'}${tm(Math.abs(d))})</span>`:d?` <span class="dl">(${d>0?'+':'−'}${dc(Math.abs(fm(d)))})</span>`:''};
@@ -439,7 +440,7 @@ const pfok=()=>{const p=D.pf||{};return !!(p.sex&&p.by&&p.h&&p.act!=null)};
 function wAt(ds){let r=null,f=null;for(const k of Object.keys(D.days).sort()){const w=D.days[k].w;if(w==null)continue;if(f==null)f=w;if(k<=ds)r=w}return r!=null?r:f}
 const r10=n=>Math.round(n/10)*10,f0=n=>Math.round(n).toLocaleString('ru-RU');
 function base(ds){if(!pfok())return null;const w=wAt(ds);if(w==null)return null;const p=D.pf;return r10((10*w+6.25*p.h-5*(+ds.slice(0,4)-p.by)+(p.sex==='m'?5:-161))*ACT[p.act][2])}
-function kcal(s){if(!pfok()||!s.dur||!okS(s))return null;const w=wAt(s.date);if(w==null)return null;const rv=(s.rs||[]).filter((_,j)=>s.s[j]&&s.s[j].r>0),rs=rv.length?mean(rv):90,met=Math.max(3.5,Math.min(6,3.5+(120-rs)/75*2.5));return r10((met-1)*w*Math.min(s.dur,9000)/3600)}
+function kcal(s){if(!pfok()||!s.dur||!okS(s))return null;const w=wAt(s.date);if(w==null)return null;const rv=(s.rs||[]).filter((_,j)=>rok(s,j)),rs=rv.length?mean(rv):90,met=Math.max(3.5,Math.min(6,3.5+(120-rs)/75*2.5));return r10((met-1)*w*Math.min(s.dur,9000)/3600)}
 function exp(ds){const b=base(ds);return b==null?null:b+D.ses.filter(s=>s.date===ds).reduce((a,s)=>a+(kcal(s)||0),0)}
 const bal=ds=>{const r=D.days[ds],e=exp(ds);return r&&r.k!=null&&e!=null?r.k-e:null};
 const bst=b=>Math.abs(b)<=100?'поддержание':b>0?'профицит':'дефицит';
